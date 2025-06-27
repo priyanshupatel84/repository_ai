@@ -3,14 +3,17 @@ import { getServerSession, Session } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import db from "@/lib/db";
 
-export async function GET(req: NextRequest, { params }: { params: { projectId: string } }) {
+export async function GET(
+  req: NextRequest,
+  context: { params: { projectId: string } }
+) {
   try {
     const session = (await getServerSession(authOptions)) as Session | null;
 
     if (!session?.user?.id) {
       return new NextResponse("Unauthorized", { status: 401 });
     }
-    const { projectId } = await params;
+    const { projectId } = context.params;
 
     const questions = await db.question.findMany({
       where: {
