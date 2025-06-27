@@ -1,4 +1,4 @@
-import { GithubRepoLoader } from "@langchain/community/document_loaders/web/github"
+import { GithubRepoLoader } from "@langchain/community/document_loaders/web/github";
 import type { Document } from "@langchain/core/documents"
 import { generateEmbedding, summariesCode } from "./gemini"
 import db from "@/lib/db"
@@ -56,15 +56,25 @@ export const loadGithubRepo = async (githubUrl: string, githubToken?: string, br
         console.log("Using default branch:", branchName)
       }
       
-    } catch (repoError: any) {
-      if (repoError.status === 404) {
-        throw new Error(
-          "Repository not found. Please check the URL and ensure the repository exists and is accessible.",
-        )
-      } else if (repoError.status === 403) {
-        throw new Error("Access denied. The repository may be private or require authentication.")
+    } catch (repoError: unknown) {
+      if (
+        typeof repoError === "object" &&
+        repoError !== null &&
+        "status" in repoError
+      ) {
+        const status = (repoError as { status?: number }).status;
+        const message = (repoError as { message?: string }).message;
+        if (status === 404) {
+          throw new Error(
+            "Repository not found. Please check the URL and ensure the repository exists and is accessible."
+          );
+        } else if (status === 403) {
+          throw new Error("Access denied. The repository may be private or require authentication.");
+        } else {
+          throw new Error(`Failed to access repository: ${message}`);
+        }
       } else {
-        throw new Error(`Failed to access repository: ${repoError.message}`)
+        throw new Error("Failed to access repository: Unknown error");
       }
     }
 
@@ -72,11 +82,21 @@ export const loadGithubRepo = async (githubUrl: string, githubToken?: string, br
     if (branchName) {
       try {
         await client.rest.repos.getBranch({ owner, repo, branch: branchName })
-      } catch (branchError: any) {
-        if (branchError.status === 404) {
-          throw new Error(`Branch '${branchName}' not found. Available branches can be checked on the repository page.`)
+      } catch (branchError: unknown) {
+        if (
+          typeof branchError === "object" &&
+          branchError !== null &&
+          "status" in branchError
+        ) {
+          const status = (branchError as { status?: number }).status;
+          const message = (branchError as { message?: string }).message;
+          if (status === 404) {
+            throw new Error(`Branch '${branchName}' not found. Available branches can be checked on the repository page.`);
+          }
+          console.warn("Branch verification failed, proceeding anyway:", message);
+        } else {
+          console.warn("Branch verification failed, proceeding anyway:", branchError);
         }
-        console.warn("Branch verification failed, proceeding anyway:", branchError.message)
       }
     }
 
@@ -318,28 +338,46 @@ const isBinaryFile = (filename: string): boolean => {
 // Enhanced rate-limited API calls with exponential backoff
 const rateLimitedSummariesCode = async (doc: Document, retries = 3): Promise<string> => {
   try {
-    return await summariesCode(doc)
-  } catch (error: any) {
-    if (retries > 0 && (error.status === 429 || error.message?.includes("rate limit"))) {
-      const delay = (4 - retries) * 2000 // Exponential backoff
-      console.log(`Rate limited, retrying in ${delay}ms...`)
-      await new Promise((resolve) => setTimeout(resolve, delay))
-      return rateLimitedSummariesCode(doc, retries - 1)
+    return await summariesCode(doc);
+  } catch (error: unknown) {
+    if (
+      retries > 0 &&
+      typeof error === "object" &&
+      error !== null &&
+      ("status" in error || "message" in error)
+    ) {
+      const status = (error as { status?: number }).status;
+      const message = (error as { message?: string }).message;
+      if (status === 429 || (typeof message === "string" && message.includes("rate limit"))) {
+        const delay = (4 - retries) * 2000; // Exponential backoff
+        console.log(`Rate limited, retrying in ${delay}ms...`);
+        await new Promise((resolve) => setTimeout(resolve, delay));
+        return rateLimitedSummariesCode(doc, retries - 1);
+      }
     }
-    throw error
+    throw error;
   }
-}
+};
 
 const rateLimitedGenerateEmbedding = async (summary: string, retries = 3): Promise<number[]> => {
   try {
-    return await generateEmbedding(summary)
-  } catch (error: any) {
-    if (retries > 0 && (error.status === 429 || error.message?.includes("rate limit"))) {
-      const delay = (4 - retries) * 2000 // Exponential backoff
-      console.log(`Rate limited, retrying in ${delay}ms...`)
-      await new Promise((resolve) => setTimeout(resolve, delay))
-      return rateLimitedGenerateEmbedding(summary, retries - 1)
+    return await generateEmbedding(summary);
+  } catch (error: unknown) {
+    if (
+      retries > 0 &&
+      typeof error === "object" &&
+      error !== null &&
+      ("status" in error || "message" in error)
+    ) {
+      const status = (error as { status?: number }).status;
+      const message = (error as { message?: string }).message;
+      if (status === 429 || (typeof message === "string" && message.includes("rate limit"))) {
+        const delay = (4 - retries) * 2000; // Exponential backoff
+        console.log(`Rate limited, retrying in ${delay}ms...`);
+        await new Promise((resolve) => setTimeout(resolve, delay));
+        return rateLimitedGenerateEmbedding(summary, retries - 1);
+      }
     }
-    throw error
+    throw error;
   }
-}
+};

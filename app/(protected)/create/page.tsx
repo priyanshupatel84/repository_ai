@@ -54,7 +54,6 @@ const CreatePage = () => {
     },
   })
 
-  const [open, setOpen] = useState(false)
   const [isProcessing, setIsProcessing] = useState(false)
   const [processingStatus, setProcessingStatus] = useState<ProcessingStatus>({
     stage: "initializing",
@@ -311,7 +310,7 @@ const CreatePage = () => {
                 <ol className="text-sm text-yellow-700 space-y-1 list-decimal list-inside">
                   <li>Go to GitHub Settings → Developer settings</li>
                   <li>Create new Personal Access Token</li>
-                  <li>Select 'repo' permissions</li>
+                  <li>Select &apos;repo&apos; permissions</li>
                   <li>Copy token to the form above</li>
                 </ol>
               </div>

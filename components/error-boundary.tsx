@@ -10,8 +10,8 @@ interface ErrorBoundaryState {
   error?: Error
 }
 
-export class ErrorBoundary extends React.Component<React.PropsWithChildren<{}>, ErrorBoundaryState> {
-  constructor(props: React.PropsWithChildren<{}>) {
+export class ErrorBoundary extends React.Component<React.PropsWithChildren<object>, ErrorBoundaryState> {
+  constructor(props: React.PropsWithChildren<object>) {
     super(props)
     this.state = { hasError: false }
   }
@@ -25,7 +25,7 @@ export class ErrorBoundary extends React.Component<React.PropsWithChildren<{}>, 
 
     // In production, send to error reporting service
     if (process.env.NODE_ENV === "production") {
-      // Example: Sentry.captureException(error, { contexts: { errorInfo } })
+
     }
   }
 

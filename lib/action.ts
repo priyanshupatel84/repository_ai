@@ -11,7 +11,8 @@ const google = createGoogleGenerativeAI({
 });
 
 // Helper function to generate text without streaming
-async function generateText(model: any, prompt: string): Promise<string> {
+type GoogleModel = ReturnType<typeof createGoogleGenerativeAI>;
+async function generateText(model: ReturnType<GoogleModel>, prompt: string): Promise<string> {
   const { textStream } = streamText({ model, prompt });
   let result = '';
   for await (const delta of textStream) {

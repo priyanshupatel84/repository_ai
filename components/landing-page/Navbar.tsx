@@ -3,9 +3,11 @@
 import { useState } from "react"
 import { useSession } from "next-auth/react"
 import { useRouter } from "next/navigation"
-import { Github, Menu, X } from "lucide-react"
+
+import { Menu, X } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { ThemeToggle } from "@/components/theme-toggle"
+import GithubLogo  from "../ui/github-logo"
 
 export default function Navbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
@@ -30,7 +32,7 @@ export default function Navbar() {
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
           <div className="flex items-center space-x-2">
-            <Github className="h-6 w-6 text-primary" />
+            <GithubLogo className="h-6 w-6 text-primary lucide lucide-github-icon lucide-github" />
             <span className="text-xl font-bold text-foreground">Repository AI</span>
           </div>
 

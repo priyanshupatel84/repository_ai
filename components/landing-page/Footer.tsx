@@ -1,5 +1,6 @@
-import { Github, Mail } from "lucide-react"
+import { Mail } from "lucide-react"
 import Link from "next/link"
+import GithubLogo from "../ui/github-logo"
 
 export default function Footer() {
   return (
@@ -11,8 +12,8 @@ export default function Footer() {
             <p className="mt-2 text-sm text-primary-foreground/70">Empowering developers with AI</p>
           </div>
           <div className="flex space-x-4">
-            <Link href="#" className="hover:text-accent">
-              <Github className="h-6 w-6"/>
+            <Link href="https://github.com/priyanshupatel84/repository_ai" className="hover:text-accent">
+              <GithubLogo className="h-6 w-6 lucide lucide-github-icon lucide-github" />
             </Link>
             <Link href="mailto:patelanshu702@gmail.com" className="hover:text-accent">
               <Mail className="h-6 w-6" />

@@ -46,35 +46,24 @@ export const metadata: Metadata = {
   openGraph: {
     type: "website",
     locale: "en_US",
-    url: process.env.NEXT_PUBLIC_APP_URL || "https://repoai.dev",
+    url: process.env.NEXT_PUBLIC_APP_URL,
     siteName: "Repository AI",
     title: "Repository AI - AI-powered repository analysis",
     description:
       "Analyze GitHub repositories with AI-powered insights, commit summaries, and intelligent Q&A",
     images: [
       {
-        url: "/og-image.png",
+        url: "/logo-image.svg",
         width: 1200,
         height: 630,
         alt: "Repository AI",
       },
     ],
   },
-  twitter: {
-    card: "summary_large_image",
-    title: "Repository AI - AI-powered repository analysis",
-    description:
-      "Analyze GitHub repositories with AI-powered insights, commit summaries, and intelligent Q&A",
-    images: ["/og-image.png"],
-    creator: "@repoai",
-  },
   viewport: {
     width: "device-width",
     initialScale: 1,
     maximumScale: 5,
-  },
-  verification: {
-    google: process.env.GOOGLE_SITE_VERIFICATION,
   },
 };
 
@@ -86,8 +75,7 @@ export default async function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
-        <link rel="icon" href="/favicon.ico" sizes="any" />
-        <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+        <link rel="icon" href="/logo-image.svg" sizes="any" />
         <meta name="theme-color" content="#35374b" />
       </head>
       <AuthProvider>

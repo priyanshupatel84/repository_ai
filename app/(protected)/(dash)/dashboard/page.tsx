@@ -2,17 +2,28 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
 import { Progress } from "@/components/ui/progress"
-import { Plus, GitBranch, Github, Loader2, CheckCircle, AlertCircle, ExternalLink, Calendar } from "lucide-react"
+import { Plus, GitBranch, Loader2, AlertCircle, ExternalLink, Calendar } from "lucide-react"
 import Link from "next/link"
 import { useSession } from "next-auth/react"
 import { redirect } from "next/navigation"
 import useProjects from "@/hooks/use-project"
 import { formatDistanceToNow } from "date-fns"
 import { ErrorBoundary } from "@/components/error-boundary"
+import GithubLogo from "@/components/ui/github-logo"
 
-function ProjectCard({ project }: { project: any }) {
+
+
+interface Project {
+  id: string
+  projectName: string
+  githubUrl: string
+  createdAt: string | Date
+  branchName?: string | null
+  status: "ready" | "loading" | "error"
+}
+
+function ProjectCard(project : Project) {
   const getRepoName = (githubUrl: string) => {
     try {
       const match = githubUrl.match(/github\.com\/([^/]+)\/([^/]+)/)
@@ -44,17 +55,6 @@ function ProjectCard({ project }: { project: any }) {
             </div>
           </div>
 
-          {/* <Badge
-            variant={
-              project.status === "ready" ? "default" : project.status === "loading" ? "secondary" : "destructive"
-            }
-            className="flex-shrink-0"
-          >
-            {project.status === "ready" && <CheckCircle className="h-3 w-3 mr-1" />}
-            {project.status === "loading" && <Loader2 className="h-3 w-3 mr-1 animate-spin" />}
-            {project.status === "error" && <AlertCircle className="h-3 w-3 mr-1" />}
-            {project.status}
-          </Badge> */}
         </div>
       </CardHeader>
 
@@ -162,7 +162,7 @@ export default function DashboardPage() {
       ) : allProjects.length === 0 ? (
         <Card>
           <CardContent className="flex flex-col items-center justify-center py-16 text-center">
-            <Github className="h-12 w-12 text-muted-foreground mb-4" />
+            <GithubLogo className="h-12 w-12 text-muted-foreground mb-4 lucide lucide-github-icon" />
             <h3 className="text-lg font-medium mb-2">No projects yet</h3>
             <p className="text-sm text-muted-foreground mb-6 max-w-sm">
               Create your first project to start analyzing GitHub repositories with AI.
@@ -180,7 +180,7 @@ export default function DashboardPage() {
           <div className="grid gap-4 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {allProjects.map((project) => (
               <ErrorBoundary key={project.id}>
-                <ProjectCard project={project} />
+                <ProjectCard {...project} />
               </ErrorBoundary>
             ))}
           </div>

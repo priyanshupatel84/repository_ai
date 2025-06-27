@@ -42,7 +42,7 @@ export const authOptions: NextAuthOptions = {
       return token;
     },
     async session({ session, token }) {
-      // Check if token exists and has required properties
+
       if (!token) {
         console.error("Token is undefined in session callback");
         return session;
@@ -50,7 +50,7 @@ export const authOptions: NextAuthOptions = {
 
       // Always ensure session.user exists
       if (!session.user) {
-        session.user = {} as any;
+        session.user = { id: '', email: '' };
       }
 
       // Only set properties if they exist in the token

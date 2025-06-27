@@ -4,7 +4,6 @@ import { useState, useEffect } from "react"
 import { usePathname } from "next/navigation"
 import Link from "next/link"
 import { LayoutDashboard, MessageSquare, GitCommitIcon, ArrowLeft } from "lucide-react"
-import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 import useProjects from "@/hooks/use-project"
 
@@ -48,7 +47,6 @@ export function AppSidebar({ isMobileOpen, setIsMobileOpen }: { isMobileOpen: bo
   const isActive = (item: (typeof navigationItems)[0]) => {
     if (!mounted) return false
 
-    const href = getHref(item)
     if (item.title === "Dashboard") {
       return pathname === "/dashboard"
     }
