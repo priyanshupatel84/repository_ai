@@ -3,17 +3,24 @@ import { getServerSession, Session } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import db from "@/lib/db";
 
-export async function GET(
-  req: NextRequest,
-  context: { params: { projectId: string } }
-) {
+// Compatible with both direct and fetch calls
+export async function GET(req: NextRequest) {
   try {
     const session = (await getServerSession(authOptions)) as Session | null;
 
     if (!session?.user?.id) {
       return new NextResponse("Unauthorized", { status: 401 });
     }
-    const { projectId } = context.params;
+
+    // Extract projectId from the URL
+    const url = new URL(req.url);
+    // Assumes route: /api/getQuestion/[projectId]
+    const pathParts = url.pathname.split("/");
+    const projectId = pathParts[pathParts.length - 1];
+
+    if (!projectId) {
+      return NextResponse.json({ error: "Missing projectId" }, { status: 400 });
+    }
 
     const questions = await db.question.findMany({
       where: {

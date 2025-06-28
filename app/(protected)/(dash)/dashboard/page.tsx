@@ -23,6 +23,7 @@ interface Project {
   status: "ready" | "loading" | "error"
 }
 
+import { useRouter } from "next/navigation"
 function ProjectCard(project : Project) {
   const getRepoName = (githubUrl: string) => {
     try {
@@ -32,6 +33,13 @@ function ProjectCard(project : Project) {
       return githubUrl
     }
   }
+  const router = useRouter();
+  const { setSelectedProjectId } = useProjects()
+
+  const handleOpenProject = (selectedProjectId: string) => {
+    setSelectedProjectId(selectedProjectId);
+    router.push(`/dashboard/${selectedProjectId}`);
+  };
 
   return (
     <Card className="hover:shadow-md transition-all duration-200 h-full">
@@ -40,17 +48,23 @@ function ProjectCard(project : Project) {
           <div className="flex-1 min-w-0">
             <CardTitle className="text-base font-medium truncate">{project.projectName}</CardTitle>
 
-            <div className="flex items-center text-sm text-muted-foreground mt-1 min-w-0">
-              <Button variant="outline" size="sm" asChild className="w-full sm:w-auto flex-shrink-0 h-8">
-                <a
+            <div className="flex items-center text-sm text-muted-foreground mt-1 min-w-0 w-full">
+              <Button
+                variant="outline"
+                size="sm"
+                asChild
+                className="w-full flex-shrink-0 h-8"
+                style={{ width: "100%" }}
+              >
+                <Link
                   href={project.githubUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex items-center gap-2"
+                  className="flex items-center gap-2 w-full"
                 >
                   <ExternalLink className="h-3 w-3" />
                   <span className="w-auto truncate text-xs">{getRepoName(project.githubUrl)}</span>
-                </a>
+                </Link>
               </Button>
             </div>
           </div>
@@ -91,21 +105,23 @@ function ProjectCard(project : Project) {
         {/* Actions */}
         <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
           {project.status === "ready" ? (
-            <Button asChild size="sm" className="flex-1">
-              <Link href={`/dashboard/${project.id}`}>Open Project</Link>
+            <Button asChild size="sm" className="flex-1 cursor-pointer" onClick={() => handleOpenProject(project.id)}>
+              <span>Open Project</span>
             </Button>
           ) : project.status === "loading" ? (
-            <Button disabled size="sm" className="flex-1">
+            <Button disabled size="sm" className="flex-1 cursor-pointer">
               <Loader2 className="mr-2 h-3 w-3 animate-spin" />
               Processing
             </Button>
           ) : (
-            <Button variant="outline" size="sm" className="flex-1" disabled>
+            <Button variant="outline" size="sm" className="flex-1 cursor-pointer" disabled>
               <AlertCircle className="mr-2 h-3 w-3" />
               Error
             </Button>
           )}
         </div>
+
+
       </CardContent>
     </Card>
   )

@@ -12,20 +12,22 @@ type Props = {
   children: React.ReactNode
 }
 
+import { usePathname } from "next/navigation"
 function DashboardLayoutContent({ children }: Props) {
-  const { allProjects, project, setSelectedProjectId } = useProjects()
+  const { allProjects, project } = useProjects()
   const [isMobileOpen, setIsMobileOpen] = useState(false)
+  const pathname = usePathname();
 
-  const handleProjectChange = (projectId: string) => {
-    setSelectedProjectId(projectId)
-  }
+  // If on /dashboard exactly, do not show selectedProject in nav
+  const isDashboardRoot = pathname === "/dashboard";
+  const navSelectedProject = isDashboardRoot ? undefined : project;
+
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
       <TopNavigation
         projects={allProjects}
-        selectedProject={project}
-        onProjectChange={handleProjectChange}
+        selectedProject={navSelectedProject}
         isMobileOpen={isMobileOpen}
         setIsMobileOpen={setIsMobileOpen}
       />

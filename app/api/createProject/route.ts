@@ -32,6 +32,7 @@ export async function POST(req: NextRequest) {
     }
 
     const body = await req.json()
+    
     const validationResult = createProjectSchema.safeParse(body)
 
     if (!validationResult.success) {
@@ -83,21 +84,35 @@ export async function POST(req: NextRequest) {
       },
     })
 
-    // Process repository in background
-    processRepositoryAsync(project.id, repoUrl, githubToken, branchName)
+    // Process repository synchronously and return 200 only when done
+    try {
+      await processRepositoryAsync(project.id, repoUrl, githubToken, branchName)
+      // Optionally, you can update the project status to 'ready' here if needed
+      await db.project.update({ where: { id: project.id }, data: { status: "ready" } })
 
-    return NextResponse.json(
-      {
-        project: {
-          id: project.id,
-          projectName: project.projectName,
-          status: project.status,
-          githubUrl: project.githubUrl,
+      return NextResponse.json(
+        {
+          project: {
+            id: project.id,
+            projectName: project.projectName,
+            status: "ready", // or project.status if you update it
+            githubUrl: project.githubUrl,
+          },
+          message: "Project created and fully processed.",
         },
-        message: "Project created successfully. Processing started.",
-      },
-      { status: 200 },
-    )
+        { status: 200 },
+      )
+    } catch (processingError) {
+      // Optionally update project status to 'error'
+      await db.project.update({ where: { id: project.id }, data: { status: "error" } })
+      return NextResponse.json(
+        {
+          error: "Project created but processing failed.",
+          details: processingError instanceof Error ? processingError.message : processingError,
+        },
+        { status: 500 },
+      )
+    }
   } catch (error) {
     console.error("Error in createProject API:", error)
 
@@ -146,8 +161,8 @@ async function processRepositoryAsync(projectId: string, githubUrl: string, gith
       where: { id: projectId },
       data: { status: "ready" },
     })
-
     console.log(`Project ${projectId} processed successfully`)
+
   } catch (error) {
     console.error(`Error processing project ${projectId}:`, error)
 

@@ -9,8 +9,10 @@ import { DeleteButton } from "@/components/delete-button"
 import { Card, CardContent } from "@/components/ui/card"
 import GithubLogo from "@/components/ui/github-logo"
 
-const DashboardPage = () => {
+
+const DashboardProjectPage = () => {
   const { project } = useProjects()
+
 
   return (
     <div className="space-y-6">
@@ -50,4 +52,4 @@ const DashboardPage = () => {
   )
 }
 
-export default DashboardPage
+export default DashboardProjectPage

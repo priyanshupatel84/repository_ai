@@ -3,10 +3,7 @@ import { z } from "zod"
 // Project validation schemas
 export const createProjectSchema = z.object({
   projectName: z
-    .string()
-    .min(1, "Project name is required")
-    .max(50, "Project name must be less than 50 characters")
-    .regex(/^[a-zA-Z0-9\s\-_]+$/, "Project name contains invalid characters"),
+    .string(),
   repoUrl: z
     .string()
     .url("Please enter a valid GitHub URL")

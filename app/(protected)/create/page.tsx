@@ -4,8 +4,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Progress } from "@/components/ui/progress"
-import { Alert, AlertDescription } from "@/components/ui/alert"
+
 import useProjects from "@/hooks/use-project"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
@@ -13,11 +12,13 @@ import { toast } from "sonner"
 import axios from "axios"
 import { useState } from "react"
 import { useRouter } from "next/navigation"
-import { Github, Loader2, CheckCircle, AlertCircle, Info, ExternalLink, LayoutDashboard, ArrowLeft } from "lucide-react"
+import {Loader2, AlertCircle, Info, ExternalLink, LayoutDashboard, ArrowLeft } from "lucide-react"
 import * as z from "zod"
 import { useSession } from "next-auth/react"
 import { SignOut } from "@/components/sign-out"
 import { UserAvatar } from "@/components/userAvatar"
+import GithubLogo from "@/components/ui/github-logo"
+import { ThemeToggle } from "@/components/theme-toggle"
 
 const formSchema = z.object({
   projectName: z.string().min(1, "Project name is required").max(50, "Project name must be less than 50 characters"),
@@ -81,15 +82,15 @@ const CreatePage = () => {
     try {
       const res = await axios.post("/api/createProject", {
         projectName: data.projectName,
-        githubUrl: data.repoUrl,
+        repoUrl: data.repoUrl,
         githubToken: data.githubToken || githubToken || process.env.GITHUB_TOKEN,
-        branchName: data.branchName || undefined,
+        branchName: data.branchName || "main",
       })
 
       if (res.status === 200) {
         await mutate()
         toast.success("Project created successfully!")
-        router.push(`/dashboard/${res.data.project.id}`)
+        router.push(`/dashboard`)
       }
     } catch (error) {
       console.error("Error creating project:", error)
@@ -124,16 +125,6 @@ const CreatePage = () => {
     })
   }
 
-  const getStatusIcon = () => {
-    switch (processingStatus.stage) {
-      case "complete":
-        return <CheckCircle className="h-4 w-4 text-green-500" />
-      case "error":
-        return <AlertCircle className="h-4 w-4 text-red-500" />
-      default:
-        return <Loader2 className="h-4 w-4 animate-spin" />
-    }
-  }
 
   const handleDashboardClick = () => {
     if (!isProcessing) {
@@ -152,7 +143,7 @@ const CreatePage = () => {
               Back
             </Button>
             <div className="w-px h-4 bg-border"></div>
-            <Github className="h-4 w-4" />
+            <GithubLogo className="h-4 w-4 " />
             <span className="font-medium text-sm">Repository AI</span>
           </div>
           <div className="flex items-center space-x-3">
@@ -160,8 +151,10 @@ const CreatePage = () => {
               <LayoutDashboard className="h-4 w-4 mr-2" />
               Dashboard
             </Button>
-            <UserAvatar className="h-6 w-6" />
+             <ThemeToggle />
+            <UserAvatar className="h-2 w-2" />
             <SignOut />
+            
           </div>
         </div>
       </div>
@@ -179,20 +172,9 @@ const CreatePage = () => {
             <CardTitle className="text-lg">Repository Details</CardTitle>
           </CardHeader>
           <CardContent className="space-y-6">
-            {/* Processing Status */}
-            {isProcessing && (
-              <Alert>
-                <div className="flex items-center space-x-3">
-                  {getStatusIcon()}
-                  <div className="flex-1">
-                    <AlertDescription className="font-medium mb-2">{processingStatus.message}</AlertDescription>
-                    <Progress value={processingStatus.progress} className="h-1" />
-                  </div>
-                </div>
-              </Alert>
-            )}
+            {/* Processing Status UI removed as requested */}
 
-            <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+            <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 ">
               <div className="grid md:grid-cols-2 gap-4">
                 {/* Project Name */}
                 <div className="space-y-2">
@@ -204,7 +186,7 @@ const CreatePage = () => {
                     {...register("projectName")}
                     placeholder="My Project"
                     disabled={isProcessing}
-                    className={errors.projectName ? "border-red-500" : ""}
+                    className={errors.projectName ? "border-red-500 text-gray-900 dark:text-white" : "text-gray-900 dark:text-white"}
                   />
                   {errors.projectName && <p className="text-sm text-red-500">{errors.projectName.message}</p>}
                 </div>
@@ -212,7 +194,7 @@ const CreatePage = () => {
                 {/* Branch Name */}
                 <div className="space-y-2">
                   <Label htmlFor="branchName">Branch Name</Label>
-                  <Input id="branchName" {...register("branchName")} placeholder="main" disabled={isProcessing} />
+                  <Input id="branchName" {...register("branchName")} placeholder="main" disabled={isProcessing} className="text-gray-900 dark:text-white" />
                 </div>
               </div>
 
@@ -226,7 +208,7 @@ const CreatePage = () => {
                   {...register("repoUrl")}
                   placeholder="https://github.com/username/repository"
                   disabled={isProcessing}
-                  className={errors.repoUrl ? "border-red-500" : ""}
+                  className={errors.repoUrl ? "border-red-500 text-gray-900 dark:text-white" : "text-gray-900 dark:text-white"}
                 />
                 {errors.repoUrl && <p className="text-sm text-red-500">{errors.repoUrl.message}</p>}
               </div>
@@ -240,6 +222,7 @@ const CreatePage = () => {
                   placeholder="ghp_xxxxxxxxxxxxxxxxxxxx"
                   type="password"
                   disabled={isProcessing}
+                  className="text-gray-900 dark:text-white"
                 />
                 <div className="bg-blue-50 border border-blue-200 rounded p-3">
                   <div className="flex items-start space-x-2">

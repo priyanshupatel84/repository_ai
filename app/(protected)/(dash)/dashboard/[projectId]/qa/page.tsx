@@ -17,8 +17,11 @@ import axios from "axios";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { useSavedAnswers } from "@/hooks/useSavedAnser";
-import { ArrowLeft, Trash2 } from "lucide-react";
+import { ArrowLeft, ExternalLink, Trash2 } from "lucide-react";
 import { UserAvatar } from "@/components/userAvatar";
+import GithubLogo from "@/components/ui/github-logo";
+import { DeleteButton } from "@/components/delete-button";
+import Link from "next/link";
 
 interface Question {
   id: string;
@@ -38,7 +41,8 @@ interface Question {
 const fetcher = (url: string) => axios.get(url).then((res) => res.data);
 
 const QAPage = () => {
-  const { projectId } = useProjects();
+  const { projectId, project } = useProjects();
+
   const { mutate: mutateSavedAnswers } = useSavedAnswers(projectId || "");
 
   const { data: questions } = useSWR<Question[]>(
@@ -71,6 +75,23 @@ const QAPage = () => {
 
   return (
     <Sheet>
+      <div className="flex items-center justify-between mb-3">
+        <div className="flex items-center space-x-3">
+          <GithubLogo className="h-5 w-5 text-muted-foreground lucide lucide-github-icon" />
+          <div>
+            <h1 className="text-xl font-medium">{project?.projectName}</h1>
+            <Link
+              href={project?.githubUrl ?? ""}
+              className="text-sm text-muted-foreground hover:text-foreground inline-flex items-center"
+            >
+              {project?.githubUrl}
+              <ExternalLink className="ml-1 h-4 w-4" />
+            </Link>
+          </div>
+        </div>
+        <DeleteButton />
+      </div>
+
       <AskQuestionCard />
 
       <div className="h-4"></div>

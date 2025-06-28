@@ -111,15 +111,17 @@ export const pollCommits = async (projectId: string, pageNo: number, githubToken
 
   return db.$transaction(async (tx) => {
     return tx.commit.createMany({
-      data: unprocessedCommits.map((commit, index) => ({
-        projectId,
-        commitHash: commit.commitHash,
-        commitMessage: commit.commitMessage,
-        commitAuthorName: commit.commitAuthorName,
-        commitAuthorAvatar: commit.commitAuthorAvatar,
-        commitDate: commit.commitDate,
-        summary: summaries[index],
-      })),
+      data: unprocessedCommits.map(
+        (commit: Response, index: number) => ({
+          projectId,
+          commitHash: commit.commitHash,
+          commitMessage: commit.commitMessage,
+          commitAuthorName: commit.commitAuthorName,
+          commitAuthorAvatar: commit.commitAuthorAvatar,
+          commitDate: commit.commitDate,
+          summary: summaries[index],
+        })
+      ),
       skipDuplicates: true,
     });
   });
@@ -176,12 +178,16 @@ async function filterUnprocessedCommits(
   projectId: string,
   commits: Response[]
 ) {
-  const existingHashes = (
+  interface ExistingCommit {
+    commitHash: string;
+  }
+
+  const existingHashes: string[] = (
     await db.commit.findMany({
       where: { projectId },
       select: { commitHash: true },
     })
-  ).map((c) => c.commitHash);
+  ).map((c: ExistingCommit) => c.commitHash);
 
   return commits.filter(
     (commit) => !existingHashes.includes(commit.commitHash)
