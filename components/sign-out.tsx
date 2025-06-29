@@ -5,20 +5,20 @@ import { signOut } from "next-auth/react";
 
 const SignOut = () => {
   const handleSignOut = async () => {
-    await signOut({
-      callbackUrl: '/',
-    })
+
+    await signOut({redirect: false});
+    window.location.href = "/"; 
   };
 
+
   return (
-    <div className="flex justify-center">
-      <Button
-        onClick={handleSignOut}
-        className="cursor-pointer"
-      >
-        Sign Out
-      </Button>
-    </div>
+    <Button
+      onClick={handleSignOut}
+      className="cursor-pointer w-full justify-start px-2 py-2 text-left"
+      variant="ghost"
+    >
+      Sign Out
+    </Button>
   );
 };
 

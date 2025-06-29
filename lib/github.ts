@@ -1,23 +1,11 @@
 import { Octokit } from "octokit";
-import db from "@/lib/db";
+import db from "@/lib/db";  // Changed from "@/server/db" to match old import
 import { aiSummariseCommits } from "./gemini";
 
-interface GitHubCommit {
-  sha: string;
-  commit: {
-    message: string;
-    author: {
-      name: string;
-      date: string;
-    };
-  };
-  author: {
-    avatar_url: string;
-  } | null;
-}
 
 interface CommitResponse {
   commitHashes: Response[];
+  totalCommits?: number;  // Made optional to maintain backward compatibility
 }
 
 interface GitHubRepository {
@@ -32,7 +20,6 @@ type Response = {
   commitAuthorAvatar: string;
   commitDate: string;
 };
-
 
 const parseGitHubUrl = (githubUrl: string): GitHubRepository => {
   const cleanUrl = githubUrl.replace(/\.git$/, "").replace(/\/$/, "");
@@ -56,13 +43,14 @@ const parseGitHubUrl = (githubUrl: string): GitHubRepository => {
 export const getCommitHashes = async (
   githubUrl: string,
   pageNo: number,
-  githubToken?: string
+  finalGithubToken?: string
 ): Promise<CommitResponse> => {
   try {
     const { owner, repo } = parseGitHubUrl(githubUrl);
-    const client = new Octokit({ auth: githubToken });
+    const client = new Octokit({ auth: finalGithubToken || process.env.GITHUB_TOKEN });
     const perPage = 10;
 
+    // Fetch only the specific page needed
     const { data } = await client.rest.repos.listCommits({
       owner,
       repo,
@@ -72,13 +60,13 @@ export const getCommitHashes = async (
     });
 
     return {
-      commitHashes: (data as GitHubCommit[]).map((commit) => ({
+      commitHashes: data.map((commit) => ({
         commitHash: commit.sha,
         commitMessage: commit.commit.message,
-        commitAuthorName: commit.commit.author.name,
+        commitAuthorName: commit.commit.author?.name ?? "",
         commitAuthorAvatar: commit.author?.avatar_url ?? "",
-        commitDate: commit.commit.author.date,
-      })),
+        commitDate: commit.commit.author?.date ?? "",
+      }))
     };
   } catch (error) {
     console.error("Error fetching commits:", error);
@@ -86,51 +74,64 @@ export const getCommitHashes = async (
   }
 };
 
-export const pollCommits = async (projectId: string, pageNo: number, githubToken?: string) => {
-  const { githubUrl } = await fetchProjectGithubUrl(projectId);
-  const { commitHashes } = await getCommitHashes(
-    githubUrl,
-    pageNo,
-    githubToken
-  );
+export const pollCommits = async (
+  projectId: string, 
+  pageNo: number, 
+  finalGithubToken?: string
+) => {
+  try {
+    const { githubUrl } = await fetchProjectGithubUrl(projectId);
+    
+    // Get commits for the specific page only
+    const { commitHashes } = await getCommitHashes(
+      githubUrl,
+      pageNo,
+      finalGithubToken
+    );
 
-  const unprocessedCommits = await filterUnprocessedCommits(
-    projectId,
-    commitHashes
-  );
+    const unprocessedCommits = await filterUnprocessedCommits(
+      projectId,
+      commitHashes
+    );
 
-  const summaryResponses = await Promise.allSettled(
-    unprocessedCommits.map((commit) =>
-      summariseCommit(githubUrl, commit.commitHash, githubToken)
-    )
-  );
+    if (unprocessedCommits.length === 0) {
+      return; // No new commits to process
+    }
 
-  const summaries = summaryResponses.map((response) =>
-    response.status === "fulfilled" ? response.value : "Summary unavailable"
-  );
+    const summaryResponses = await Promise.allSettled(
+      unprocessedCommits.map((commit) =>
+        summariseCommit(githubUrl, commit.commitHash, finalGithubToken)
+      )
+    );
 
-  return db.$transaction(async (tx) => {
-    return tx.commit.createMany({
-      data: unprocessedCommits.map(
-        (commit: Response, index: number) => ({
-          projectId,
-          commitHash: commit.commitHash,
-          commitMessage: commit.commitMessage,
-          commitAuthorName: commit.commitAuthorName,
-          commitAuthorAvatar: commit.commitAuthorAvatar,
-          commitDate: commit.commitDate,
-          summary: summaries[index],
-        })
-      ),
+    const summaries = summaryResponses.map((response) =>
+      response.status === "fulfilled" ? response.value : "Summary unavailable"
+    );
+
+    const commitData = unprocessedCommits.map((commit: Response, index: number) => ({
+      projectId,
+      commitHash: commit.commitHash,
+      commitMessage: commit.commitMessage,
+      commitAuthorName: commit.commitAuthorName,
+      commitAuthorAvatar: commit.commitAuthorAvatar,
+      commitDate: commit.commitDate,
+      summary: summaries[index],
+    }));
+
+    return db.commit.createMany({
+      data: commitData,
       skipDuplicates: true,
     });
-  });
+  } catch (error) {
+    console.error(`Failed to poll commits for project ${projectId}:`, error);
+    throw error; // Re-throw so API can handle it
+  }
 };
 
-async function summariseCommit(githubUrl: string, commitHash: string, githubToken?: string) {
+async function summariseCommit(githubUrl: string, commitHash: string, finalGithubToken?: string) {
   try {
     const { owner, repo } = parseGitHubUrl(githubUrl);
-    const client = new Octokit({ auth: githubToken|| process.env.GITHUB_TOKEN });
+    const client = new Octokit({ auth: finalGithubToken || process.env.GITHUB_TOKEN });
     const { data } = await client.rest.repos.getCommit({
       owner,
       repo,

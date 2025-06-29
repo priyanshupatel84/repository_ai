@@ -29,9 +29,9 @@ export const metadata: Metadata = {
     "code analysis",
     "developer tools",
   ],
-  authors: [{ name: "Repository AI Team" }],
-  creator: "Repository AI",
-  publisher: "Repository AI",
+  authors: [{ name: "Priyanshu Patel" }],
+  creator: "Priyanshu patel",
+  publisher: "vercel",
   robots: {
     index: true,
     follow: true,

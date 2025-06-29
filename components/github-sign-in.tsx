@@ -19,9 +19,10 @@ const GithubSignIn = () => {
     }
   };
 
+
   return (
     <Button 
-      className="w-full h-11" 
+      className="w-full h-11 cursor-pointer" 
       variant="outline" 
       onClick={handleSignIn}
       disabled={isLoading}

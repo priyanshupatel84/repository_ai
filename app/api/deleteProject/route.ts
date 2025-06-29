@@ -4,14 +4,13 @@ import { authOptions } from "@/lib/auth";
 import db from "@/lib/db";
 import { z } from "zod";
 
+
 const deleteSchema = z.object({
   projectId: z.string()
 });
 
 export async function DELETE(req: NextRequest) {
-
   const session = await getServerSession(authOptions) as Session | null;
-
   if (!session) return new NextResponse("Unauthorized", { status: 401 });
 
   try {
@@ -30,6 +29,7 @@ export async function DELETE(req: NextRequest) {
     await db.project.delete({
       where: { id: projectId }
     });
+
 
     return new NextResponse(null, { status: 204 });
   } catch (error) {

@@ -17,7 +17,7 @@ const fetcher = (url: string) => axios.get(url).then((res) => res.data)
 
 export default function useProjects() {
   const { data, error, isLoading, mutate } = useSWR<Project[]>("/api/getProjects", fetcher, {
-    refreshInterval: 5000, // Refresh every 5 seconds to check processing status
+    // refreshInterval: 5000,
     revalidateOnFocus: true,
     revalidateOnReconnect: true,
     dedupingInterval: 2000,

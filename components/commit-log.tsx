@@ -27,7 +27,9 @@ const CommitLog = () => {
   const [pageNo, setPageNo] = useState(1);
   const [commits, setCommits] = useState<Commit[]>([]);
   const [totalPages, setTotalPages] = useState(0);
+  const [totalCommits, setTotalCommits] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const { projectId } = useProjects();
   const { data: session } = useSession();
 
@@ -38,17 +40,21 @@ const CommitLog = () => {
       if (!projectId) return;
 
       setIsLoading(true);
+      setError(null);
+      
       try {
         const response = await axios.post<ApiResponse>("/api/getCommits", {
           projectId,
           pageNo,
-          githubToken: githubToken || process.env.GITHUB_TOKEN,
+          githubToken: githubToken,
         });
 
         setCommits(response.data.commits);
         setTotalPages(response.data.totalPages);
+        setTotalCommits(response.data.totalCommits);
       } catch (error) {
         console.error("Failed to fetch commits:", error);
+        setError("Failed to load commits. Please try again.");
       } finally {
         setIsLoading(false);
       }
@@ -59,20 +65,35 @@ const CommitLog = () => {
 
   return (
     <>
-      {isLoading && (
+      {error && (
         <div className="flex h-64 items-center justify-center">
-          <p className="text-gray-500 font-semibold">Fetching Commits...</p>
+          <p className="text-red-500 font-semibold">{error}</p>
         </div>
       )}
 
-      {!isLoading && commits.length === 0 && (
+      {isLoading && (
+        <div className="flex h-64 items-center justify-center">
+          <div className="text-center">
+            <p className="text-gray-500 font-semibold">Fetching Commits...</p>
+            <p className="text-sm text-gray-400 mt-2">
+              Page {pageNo} of {totalPages || '?'}
+            </p>
+          </div>
+        </div>
+      )}
+
+      {!isLoading && !error && commits.length === 0 && (
         <div className="flex h-64 items-center justify-center">
           <p className="text-gray-500 font-semibold">No commits found</p>
         </div>
       )}
 
-      {!isLoading && commits.length > 0 && (
+      {!isLoading && !error && commits.length > 0 && (
         <>
+          <div className="mb-4 text-sm text-gray-500">
+            Showing {commits.length} of {totalCommits} commits (Page {pageNo} of {totalPages})
+          </div>
+          
           <ul className="space-y-6">
             {commits.map((commit) => (
               <li key={commit.id} className="relative flex gap-x-4">
@@ -100,6 +121,9 @@ const CommitLog = () => {
                       {commit.summary}
                     </p>
                   )}
+                  <p className="mt-1 text-xs text-gray-400 font-mono">
+                    {commit.commitHash.substring(0, 8)}
+                  </p>
                 </div>
               </li>
             ))}
@@ -118,4 +142,5 @@ const CommitLog = () => {
     </>
   );
 };
+
 export default CommitLog;

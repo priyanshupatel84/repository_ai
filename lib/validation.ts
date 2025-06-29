@@ -2,21 +2,23 @@ import { z } from "zod"
 
 // Project validation schemas
 export const createProjectSchema = z.object({
-  projectName: z
-    .string(),
+  projectName: z.string().min(1, "Project name is required").max(50, "Project name must be less than 50 characters").trim(),
   repoUrl: z
     .string()
     .url("Please enter a valid GitHub URL")
-    .refine((url) => url.includes("github.com"), "URL must be a GitHub repository")
-    .refine((url) => {
-      const githubUrlRegex = /^https:\/\/github\.com\/[a-zA-Z0-9_.-]+\/[a-zA-Z0-9_.-]+\/?$/
-      return githubUrlRegex.test(url.replace(/\/$/, ""))
-    }, "Invalid GitHub URL format"),
-  githubToken: z.string().optional(),
-  branchName: z
-    .string()
-    .optional()
-    .refine((branch) => !branch || /^[a-zA-Z0-9\-_/.]+$/.test(branch), "Invalid branch name"),
+    .refine((url) => url.includes("github.com"), "URL must be a GitHub repository"),
+  githubToken: z.string().optional().refine((token) => {
+    if (!token) return true; // Optional field
+    return token.trim().length >= 20 && (
+      token.startsWith('ghp_') || 
+      token.startsWith('github_pat_') || 
+      token.startsWith('gho_') ||
+      token.startsWith('ghu_') ||
+      token.startsWith('ghs_') ||
+      token.startsWith('ghr_')
+    )
+  }, "Invalid GitHub token format"),
+  branchName: z.string(),
 })
 
 // Question validation schema

@@ -5,10 +5,6 @@ import { generateEmbedding, summariesCode } from "./gemini"
 import db from "@/lib/db"
 import { Octokit } from "octokit"
 
-// const octokit = new Octokit({
-//   auth: process.env.GITHUB_TOKEN,
-// })
-
 // Enhanced GitHub URL parser with better validation
 const parseGitHubUrl = (url: string) => {
   try {
@@ -44,6 +40,7 @@ export const loadGithubRepo = async (githubUrl: string, githubToken?: string, br
   try {
     const { owner, repo } = parseGitHubUrl(githubUrl)
     console.log("Loading repository:", { owner, repo, branch: branchName })
+    
     // Create Octokit instance with provided token or default
     const client = new Octokit({ auth: githubToken })
 
@@ -56,7 +53,6 @@ export const loadGithubRepo = async (githubUrl: string, githubToken?: string, br
         branchName = data.default_branch
         console.log("Using default branch:", branchName)
       }
-      
     } catch (repoError: unknown) {
       if (
         typeof repoError === "object" &&
@@ -101,6 +97,9 @@ export const loadGithubRepo = async (githubUrl: string, githubToken?: string, br
       }
     }
 
+    // Note: File counting is now done in the API route before calling this function
+    // This avoids duplicate API calls and improves performance
+
     // Load repository with enhanced configuration
     const loader = new GithubRepoLoader(`https://github.com/${owner}/${repo}`, {
       accessToken: githubToken || process.env.GITHUB_TOKEN || "",
@@ -124,7 +123,6 @@ export const loadGithubRepo = async (githubUrl: string, githubToken?: string, br
         "*.min.js",
         "*.min.css",
         "LICENSE",
-        
       ],
       recursive: true,
       processSubmodules: false, // Disable submodules for better performance
@@ -156,8 +154,8 @@ export const loadGithubRepo = async (githubUrl: string, githubToken?: string, br
 export const indexGithubRepo = async (
   projectId: string,
   githubUrl: string,
+  branchName: string,
   githubToken?: string,
-  branchName?: string,
 ) => {
   try {
     console.log("Starting repository indexing:", { projectId, githubUrl, branchName })
