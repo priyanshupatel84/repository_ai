@@ -14,6 +14,7 @@ import { toast } from "sonner"
 export function DemoSignIn() {
   const [isLoading, setIsLoading] = useState(false)
   const [showCredentials, setShowCredentials] = useState(false)
+  const [showPassword, setShowPassword] = useState(false)
   const [username, setUsername] = useState("")
   const [password, setPassword] = useState("")
 
@@ -113,7 +114,7 @@ export function DemoSignIn() {
               <div className="relative">
                 <Input
                   id="demo-password"
-                  type="password"
+                  type={showPassword ? "text" : "password"}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="demo@123"
@@ -125,9 +126,9 @@ export function DemoSignIn() {
                   variant="ghost"
                   size="sm"
                   className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
-                  onClick={() => setShowCredentials(!showCredentials)}
+                  onClick={() => setShowPassword(!showPassword)}
                 >
-                  {showCredentials ? (
+                  {showPassword ? (
                     <EyeOff className="h-4 w-4 text-orange-600" />
                   ) : (
                     <Eye className="h-4 w-4 text-orange-600" />
