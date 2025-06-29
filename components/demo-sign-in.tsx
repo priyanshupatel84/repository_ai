@@ -125,7 +125,7 @@ export function DemoSignIn() {
                   type="button"
                   variant="ghost"
                   size="sm"
-                  className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                  className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent cursor-pointer"
                   onClick={() => setShowPassword(!showPassword)}
                 >
                   {showPassword ? (
@@ -141,7 +141,7 @@ export function DemoSignIn() {
               <Button
                 type="submit"
                 disabled={isLoading || !username || !password}
-                className="flex-1 bg-orange-600 hover:bg-orange-700 text-white"
+                className="flex-1 bg-orange-600 hover:bg-orange-700 text-white cursor-pointer"
               >
                 {isLoading ? (
                   <>
@@ -159,7 +159,7 @@ export function DemoSignIn() {
                 type="button"
                 variant="outline"
                 onClick={() => setShowCredentials(false)}
-                className="border-orange-200 text-orange-700 hover:bg-orange-50 dark:border-orange-700 dark:text-orange-300"
+                className="border-orange-200 text-orange-700 hover:bg-orange-50 dark:border-orange-700 dark:text-orange-300 cursor-pointer"
               >
                 Cancel
               </Button>
