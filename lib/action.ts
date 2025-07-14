@@ -53,7 +53,7 @@ export const askQuestion = async (question: string, projectId: string) => {
     // Generate AI response function
     (async () => {
     const { textStream } = await streamText({
-      model: google("gemini-1.5-flash"),
+      model: google("gemini-2.0-flash"),
       prompt: `
 You are an AI code assistant who answers questions about the codebase. Your target audience is a technical intern with basic programming knowledge.
 

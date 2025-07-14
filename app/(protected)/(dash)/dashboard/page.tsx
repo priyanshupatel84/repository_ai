@@ -1,202 +1,240 @@
-"use client"
+"use client";
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Plus, GitBranch, Loader2, AlertCircle, ExternalLink, Calendar, CheckCircle } from "lucide-react"
-import Link from "next/link"
-import useProjects from "@/hooks/use-project"
-import { formatDistanceToNow } from "date-fns"
-import { ErrorBoundary } from "@/components/error-boundary"
-import GithubLogo from "@/components/ui/github-logo"
-import { useSession } from "next-auth/react"
-import { Badge } from "@/components/ui/badge"
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import {
+  Plus,
+  GitBranch,
+  Loader2,
+  AlertCircle,
+  ExternalLink,
+  Calendar,
+  CheckCircle,
+} from "lucide-react";
+import Link from "next/link";
+import useProjects from "@/hooks/use-project";
+import { formatDistanceToNow } from "date-fns";
+import { ErrorBoundary } from "@/components/error-boundary";
+import GithubLogo from "@/components/ui/github-logo";
+import { useSession } from "next-auth/react";
+
 
 interface Project {
-  id: string
-  projectName: string
-  githubUrl: string
-  createdAt: string | Date
-  branchName?: string | null
-  status: "ready" | "loading" | "error"
+  id: string;
+  projectName: string;
+  githubUrl: string;
+  createdAt: string | Date;
+  branchName?: string | null;
+  status: "ready" | "loading" | "error";
 }
 
-import { useRouter } from "next/navigation"
+import { useRouter } from "next/navigation";
+import { DeleteButton } from "@/components/delete-button";
 
-// Status Badge Component
-function StatusBadge({ status }: { status: Project['status'] }) {
+// Updated Status Badge Component with modern design
+function StatusBadge({ status }: { status: Project["status"] }) {
   const statusConfig = {
     ready: {
-      label: "Ready",
-      variant: "default" as const,
-      icon: CheckCircle,
-      className: "bg-green-100 text-green-800 border-green-200 dark:bg-green-900 dark:text-green-200 dark:border-green-800"
+      label: "Active",
+      color:
+        "text-green-600 bg-green-100 dark:bg-green-900/50 dark:text-green-400",
+      dotColor: "bg-green-500",
     },
     loading: {
       label: "Processing",
-      variant: "secondary" as const,
-      icon: Loader2,
-      className: "bg-yellow-100 text-yellow-800 border-yellow-200 dark:bg-yellow-900 dark:text-yellow-200 dark:border-yellow-800"
+      color:
+        "text-yellow-600 bg-yellow-100 dark:bg-yellow-900/50 dark:text-yellow-400",
+      dotColor: "bg-yellow-500",
     },
     error: {
-      label: "Error",
-      variant: "destructive" as const,
-      icon: AlertCircle,
-      className: "bg-red-100 text-red-800 border-red-200 dark:bg-red-900 dark:text-red-200 dark:border-red-800"
-    }
-  }
+      label: "Failed",
+      color: "text-red-600 bg-red-100 dark:bg-red-900/50 dark:text-red-400",
+      dotColor: "bg-red-500",
+    },
+  };
 
-  const config = statusConfig[status]
-  const Icon = config.icon
+  const config = statusConfig[status];
 
   return (
-    <Badge variant={config.variant} className={`flex items-center gap-1 ${config.className}`}>
-      <Icon className={`h-3 w-3 ${status === 'loading' ? 'animate-spin' : ''}`} />
+    <div
+      className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${config.color}`}
+    >
+      <span
+        className={`w-2 h-2 mr-2 rounded-full ${config.dotColor} ${
+          status === "loading" ? "animate-pulse" : ""
+        }`}
+      ></span>
       {config.label}
-    </Badge>
-  )
+    </div>
+  );
 }
 
 function ProjectCard(project: Project) {
   const getRepoName = (githubUrl: string) => {
     try {
-      const match = githubUrl.match(/github\.com\/([^/]+)\/([^/]+)/)
-      return match ? `${match[1]}/${match[2]}` : githubUrl
+      const match = githubUrl.match(/github\.com\/([^/]+)\/([^/]+)/);
+      return match ? `${match[1]}/${match[2].replace(".git", "")}` : githubUrl;
     } catch {
-      return githubUrl
+      return githubUrl;
     }
-  }
-  const router = useRouter()
-  const { setSelectedProjectId } = useProjects()
+  };
 
-  const handleOpenProject = (selectedProjectId: string) => {
-    setSelectedProjectId(selectedProjectId)
-    router.push(`/dashboard/${selectedProjectId}`)
-  }
+  const router = useRouter();
+  const { setSelectedProjectId } = useProjects();
+  const repoName = getRepoName(project.githubUrl);
+
+  const handleOpenProject = () => {
+    if (project.status === "ready") {
+      setSelectedProjectId(project.id);
+      router.push(`/dashboard/${project.id}`);
+    }
+  };
+
+  const handleViewGithub = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    window.open(project.githubUrl, "_blank");
+  };
+
+
 
   return (
-    <Card className="hover:shadow-md transition-all duration-200 h-full">
-      <CardHeader className="pb-3">
-        <div className="flex items-start justify-between gap-3">
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center justify-between gap-2 mb-2">
-              <CardTitle className="text-base font-medium truncate flex-1">{project.projectName}</CardTitle>
-              <StatusBadge status={project.status} />
-            </div>
+    <div
+      className={`
+        group flex flex-col h-full bg-white dark:bg-gray-800 border 
+        shadow-sm transition-all duration-300 rounded-xl overflow-hidden
+        border-gray-200 hover:shadow-lg dark:border-gray-700 hover:border-blue-400 dark:hover:border-blue-500
+        
+      `}
+    >
+      {/* Main Content */}
+      <div className="p-5 flex flex-col gap-4 flex-grow">
+        {/* Header Row: Status and Options */}
+        <div className="flex items-center justify-between">
+          <StatusBadge status={project.status} />
 
-            <div className="flex items-center text-sm text-muted-foreground mt-1 min-w-0 w-full">
-              <Button
-                variant="outline"
-                size="sm"
-                asChild
-                className="w-full flex-shrink-0 h-8 bg-transparent"
-                style={{ width: "100%" }}
-              >
-                <Link
-                  href={project.githubUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center gap-2 w-full"
-                >
-                  <ExternalLink className="h-3 w-3" />
-                  <span className="w-auto truncate text-xs">{getRepoName(project.githubUrl)}</span>
-                </Link>
-              </Button>
-            </div>
+          <div className="w-4 h-3 mr-12">
+            <DeleteButton />
           </div>
         </div>
-      </CardHeader>
 
-      <CardContent className="space-y-4">
-        {/* Processing Progress */}
-        {/* {project.status === "loading" && (
-          <div className="space-y-2">
-            <div className="flex justify-between text-xs">
-              <span>Processing...</span>
-              <span>~3 min</span>
-            </div>
-            <Progress value={65} className="h-1" />
-          </div>
-        )} */}
+        {/* Project Details */}
+        <div>
+          <h3
+            className="text-lg font-semibold text-gray-900 dark:text-white mb-1 truncate"
+            title={project.projectName}
+          >
+            {project.projectName}
+          </h3>
 
-        {/* Error Message */}
-        {/* {project.status === "error" && (
-          <div className="bg-red-50 dark:bg-red-950 border border-red-200 dark:border-red-800 rounded-md p-3">
-            <div className="flex items-center">
-              <AlertCircle className="h-4 w-4 text-red-600 mr-2" />
-              <p className="text-xs text-red-800 dark:text-red-200">
-                Project processing failed. Please try creating it again.
-              </p>
-            </div>
+          {/* GitHub Link */}
+          <div
+            className="flex items-center text-sm text-gray-500 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors cursor-pointer"
+            onClick={handleViewGithub}
+            title={`View ${repoName} on GitHub`}
+          >
+            <GithubLogo className="w-4 h-4 mr-2 flex-shrink-0" />
+            <span className="truncate font-medium">{repoName}</span>
+            <ExternalLink className="w-3 h-3 ml-1 opacity-0 group-hover:opacity-100 transition-opacity" />
           </div>
-        )} */}
-
-        {/* Success Message */}
-        {/* {project.status === "ready" && (
-          <div className="bg-green-50 dark:bg-green-950 border border-green-200 dark:border-green-800 rounded-md p-3">
-            <div className="flex items-center">
-              <CheckCircle className="h-4 w-4 text-green-600 mr-2" />
-              <p className="text-xs text-green-800 dark:text-green-200">
-                Project is ready for analysis and querying.
-              </p>
-            </div>
-          </div>
-        )} */}
-
-        {/* Metadata */}
-        <div className="flex items-center justify-between text-xs text-muted-foreground">
-          <div className="flex items-center min-w-0">
-            <Calendar className="h-3 w-3 mr-1 flex-shrink-0" />
-            <span className="truncate">
-              {formatDistanceToNow(new Date(project.createdAt), {
-                addSuffix: true,
-              })}
-            </span>
-          </div>
-          {project.branchName && (
-            <div className="flex items-center min-w-0 ml-2">
-              <GitBranch className="h-3 w-3 mr-1 flex-shrink-0" />
-              <span className="truncate max-w-16">{project.branchName}</span>
-            </div>
-          )}
         </div>
 
-        {/* Actions */}
-        <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
+        {/* Loading State Indication */}
+        {project.status === "loading" && (
+          <div className="mt-auto pt-2">
+            <div className="w-full bg-gray-200 rounded-full h-1.5 dark:bg-gray-700">
+              <div
+                className="bg-blue-600 h-1.5 rounded-full animate-pulse"
+                style={{ width: "45%" }}
+              ></div>
+            </div>
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+              Analyzing repository...
+            </p>
+          </div>
+        )}
+
+        {/* Error State Indication */}
+        {project.status === "error" && (
+          <div className="mt-auto pt-2 flex items-center text-red-600 dark:text-red-400">
+            <AlertCircle className="w-4 h-4 mr-2" />
+            <p className="text-xs">
+              Processing failed. Click options to retry.
+            </p>
+          </div>
+        )}
+
+        {/* Action Button */}
+        <div className="mt-auto pt-2">
           {project.status === "ready" ? (
-            <Button asChild size="sm" className="flex-1 cursor-pointer" onClick={() => handleOpenProject(project.id)}>
-              <span>Open Project</span>
+            <Button
+              size="sm"
+              className="w-full cursor-pointer"
+              onClick={(e) => {
+                e.stopPropagation();
+                handleOpenProject();
+              }}
+            >
+              Open Project
             </Button>
           ) : project.status === "loading" ? (
-            <Button disabled size="sm" className="flex-1 cursor-pointer">
+            <Button disabled size="sm" className="w-full">
               <Loader2 className="mr-2 h-3 w-3 animate-spin" />
               Processing
             </Button>
           ) : (
-            <Button variant="outline" size="sm" className="flex-1 cursor-pointer bg-transparent" disabled>
+            <Button variant="outline" size="sm" className="w-full" disabled>
               <AlertCircle className="mr-2 h-3 w-3" />
               Error
             </Button>
           )}
         </div>
+      </div>
 
-      </CardContent>
-    </Card>
-  )
+      {/* Footer (Metadata) */}
+      <div className="px-5 py-3 border-t border-gray-100 dark:border-gray-700/50 bg-gray-50 dark:bg-gray-800/50">
+        <div className="flex justify-between items-center text-xs text-gray-500 dark:text-gray-400">
+          {/* Branch */}
+          {project.branchName && (
+            <div className="flex items-center min-w-0 max-w-[50%]">
+              <GitBranch className="h-3.5 w-3.5 mr-1.5 flex-shrink-0 text-gray-400 dark:text-gray-500" />
+              <span
+                className="truncate font-mono text-xs"
+                title={project.branchName}
+              >
+                {project.branchName}
+              </span>
+            </div>
+          )}
+
+          {/* Created At */}
+          <div className="flex items-center ml-4 flex-shrink-0">
+            <Calendar className="h-3.5 w-3.5 mr-1.5 text-gray-400 dark:text-gray-500" />
+            <span>
+              {formatDistanceToNow(new Date(project.createdAt), {
+                addSuffix: true,
+              })}
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
 }
 
 export default function DashboardPage() {
-  const { allProjects, loadingProjects, errorProjects, isLoading } = useProjects()
-  const { data: session } = useSession()
-  const isDemoUser = session?.user?.isDemoUser
+  const { allProjects, loadingProjects, errorProjects, isLoading } =
+    useProjects();
+  const { data: session } = useSession();
+  const isDemoUser = session?.user?.isDemoUser;
 
   // Calculate status counts
-  const readyProjects = allProjects.filter(p => p.status === 'ready')
+  const readyProjects = allProjects.filter((p) => p.status === "ready");
   const statusCounts = {
     ready: readyProjects.length,
     loading: loadingProjects.length,
     error: errorProjects.length,
-    total: allProjects.length
-  }
+    total: allProjects.length,
+  };
 
   return (
     <div className="space-y-6">
@@ -211,20 +249,25 @@ export default function DashboardPage() {
                 : "Manage your repository analysis projects"}
             </p>
             {statusCounts.total > 0 && (
-              <div className="flex items-center gap-2">
-                <StatusBadge status="ready" />
-                <span className="text-xs text-muted-foreground">{statusCounts.ready}</span>
+              <div className="flex items-center space-x-6 text-sm text-gray-600 dark:text-gray-300">
+                <div className="flex items-center text-green-600 dark:text-green-400">
+                  <CheckCircle className="w-4 h-4 mr-2" />
+                  <span className="font-semibold mr-2">Active:</span>{" "}
+                  {statusCounts.ready}
+                </div>
                 {statusCounts.loading > 0 && (
-                  <>
-                    <StatusBadge status="loading" />
-                    <span className="text-xs text-muted-foreground">{statusCounts.loading}</span>
-                  </>
+                  <div className="flex items-center text-yellow-600 dark:text-yellow-400">
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    <span className="font-semibold mr-2">Processing:</span>{" "}
+                    {statusCounts.loading}
+                  </div>
                 )}
                 {statusCounts.error > 0 && (
-                  <>
-                    <StatusBadge status="error" />
-                    <span className="text-xs text-muted-foreground">{statusCounts.error}</span>
-                  </>
+                  <div className="flex items-center text-red-600 dark:text-red-400">
+                    <AlertCircle className="w-4 h-4 mr-2" />
+                    <span className="font-semibold mr-2">Failed:</span>{" "}
+                    {statusCounts.error}
+                  </div>
                 )}
               </div>
             )}
@@ -240,9 +283,9 @@ export default function DashboardPage() {
 
       {/* Projects Grid */}
       {isLoading ? (
-        <div className="grid gap-4 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-6 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {[1, 2, 3, 4, 5, 6].map((i) => (
-            <Card key={i} className="animate-pulse">
+            <Card key={i} className="animate-pulse h-[200px]">
               <CardHeader>
                 <div className="flex items-start justify-between">
                   <div className="space-y-2 flex-1">
@@ -254,10 +297,7 @@ export default function DashboardPage() {
               </CardHeader>
               <CardContent className="space-y-3">
                 <div className="h-3 bg-muted rounded"></div>
-                <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
-                  <div className="h-8 bg-muted rounded flex-1"></div>
-                  <div className="h-8 bg-muted rounded w-full sm:w-10"></div>
-                </div>
+                <div className="h-8 bg-muted rounded"></div>
               </CardContent>
             </Card>
           ))}
@@ -266,7 +306,9 @@ export default function DashboardPage() {
         <Card>
           <CardContent className="flex flex-col items-center justify-center py-16 text-center">
             <GithubLogo className="h-12 w-12 text-muted-foreground mb-4 lucide lucide-github-icon" />
-            <h3 className="text-lg font-medium mb-2">{isDemoUser ? "Demo Projects Loading" : "No projects yet"}</h3>
+            <h3 className="text-lg font-medium mb-2">
+              {isDemoUser ? "Demo Projects Loading" : "No projects yet"}
+            </h3>
             <p className="text-sm text-muted-foreground mb-6 max-w-sm">
               {isDemoUser
                 ? "Demo projects are being set up. Please refresh the page in a moment or run the demo data script."
@@ -282,7 +324,7 @@ export default function DashboardPage() {
         </Card>
       ) : (
         <>
-          <div className="grid gap-4 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          <div className="grid gap-6 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {allProjects.map((project) => (
               <ErrorBoundary key={project.id}>
                 <ProjectCard {...project} />
@@ -301,7 +343,9 @@ export default function DashboardPage() {
                       {loadingProjects.length} project
                       {loadingProjects.length > 1 ? "s" : ""} processing
                     </p>
-                    <p className="text-xs text-yellow-700 dark:text-yellow-300">Usually takes 2-5 minutes</p>
+                    <p className="text-xs text-yellow-700 dark:text-yellow-300">
+                      Usually takes 2-5 minutes
+                    </p>
                   </div>
                 </div>
               </CardContent>
@@ -318,7 +362,9 @@ export default function DashboardPage() {
                       {errorProjects.length} project
                       {errorProjects.length > 1 ? "s" : ""} failed
                     </p>
-                    <p className="text-xs text-red-700 dark:text-red-300">Try creating them again</p>
+                    <p className="text-xs text-red-700 dark:text-red-300">
+                      Try creating them again
+                    </p>
                   </div>
                 </div>
               </CardContent>
@@ -327,5 +373,5 @@ export default function DashboardPage() {
         </>
       )}
     </div>
-  )
+  );
 }

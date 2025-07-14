@@ -14,6 +14,7 @@ import { toast } from "sonner"
 export function DemoSignIn() {
   const [isLoading, setIsLoading] = useState(false)
   const [showCredentials, setShowCredentials] = useState(false)
+  const [showPassword, setShowPassword] = useState(false)
   const [username, setUsername] = useState("")
   const [password, setPassword] = useState("")
 
@@ -113,7 +114,7 @@ export function DemoSignIn() {
               <div className="relative">
                 <Input
                   id="demo-password"
-                  type="password"
+                  type={showPassword ? "text" : "password"}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="demo@123"
@@ -124,10 +125,10 @@ export function DemoSignIn() {
                   type="button"
                   variant="ghost"
                   size="sm"
-                  className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
-                  onClick={() => setShowCredentials(!showCredentials)}
+                  className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent cursor-pointer"
+                  onClick={() => setShowPassword(!showPassword)}
                 >
-                  {showCredentials ? (
+                  {showPassword ? (
                     <EyeOff className="h-4 w-4 text-orange-600" />
                   ) : (
                     <Eye className="h-4 w-4 text-orange-600" />
@@ -140,7 +141,7 @@ export function DemoSignIn() {
               <Button
                 type="submit"
                 disabled={isLoading || !username || !password}
-                className="flex-1 bg-orange-600 hover:bg-orange-700 text-white"
+                className="flex-1 bg-orange-600 hover:bg-orange-700 text-white cursor-pointer"
               >
                 {isLoading ? (
                   <>
@@ -158,7 +159,7 @@ export function DemoSignIn() {
                 type="button"
                 variant="outline"
                 onClick={() => setShowCredentials(false)}
-                className="border-orange-200 text-orange-700 hover:bg-orange-50 dark:border-orange-700 dark:text-orange-300"
+                className="border-orange-200 text-orange-700 hover:bg-orange-50 dark:border-orange-700 dark:text-orange-300 cursor-pointer"
               >
                 Cancel
               </Button>
